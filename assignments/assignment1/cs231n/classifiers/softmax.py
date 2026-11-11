@@ -73,6 +73,7 @@ def softmax_loss_vectorized(W, X, y, reg):
     # Initialize the loss and gradient to zero.
     loss = 0.0
     dW = np.zeros_like(W)
+    num_train = X.shape[0]
 
 
     #############################################################################
@@ -80,7 +81,13 @@ def softmax_loss_vectorized(W, X, y, reg):
     # Implement a vectorized version of the softmax loss, storing the           #
     # result in loss.                                                           #
     #############################################################################
-
+    scores = X.dot(W)
+    scores -= np.max(scores, axis=1, keepdims=True)
+    exp_scores = np.exp(scores)
+    p = exp_scores / np.sum(exp_scores, axis=1, keepdims=True)
+    correct_class_probs = p[np.arange(num_train), y]
+    loss = np.sum(np.log(correct_class_probs)) / num_train
+    loss += reg * np.sum(W * W)
 
     #############################################################################
     # TODO:                                                                     #
@@ -92,5 +99,10 @@ def softmax_loss_vectorized(W, X, y, reg):
     # loss.                                                                     #
     #############################################################################
 
+    dscores = p.copy()
+    dscores[np.arange(num_train), y] -= 1.0
+    dW = X.T.dot(dscores) / num_train
+
+    dW += 2 * reg * W
 
     return loss, dW
